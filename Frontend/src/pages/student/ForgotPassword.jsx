@@ -11,7 +11,7 @@ const ForgotPassword = () => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     setMessage('');
-    const res = await fetch('http://localhost:8000/api/users/forgot-password', {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/forgot-password`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
@@ -28,7 +28,7 @@ const ForgotPassword = () => {
   const handleResetPassword = async (e) => {
     e.preventDefault();
     setMessage('');
-    const res = await fetch('http://localhost:8000/api/users/reset-password-otp', {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/reset-password-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, otp, newPassword }),

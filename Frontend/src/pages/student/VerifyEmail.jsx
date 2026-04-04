@@ -8,7 +8,7 @@ const VerifyEmail = () => {
   useEffect(() => {
     const token = searchParams.get('token');
     if (token) {
-      fetch(`http://localhost:8000/api/users/verify-email?token=${token}`)
+      fetch(`${import.meta.env.VITE_API_URL}/api/users/verify-email?token=${token}`)
         .then(res => res.json())
         .then(data => {
           setMessage(data.message || 'Verification complete.');

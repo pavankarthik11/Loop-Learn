@@ -22,7 +22,7 @@ export const AppContextProvider = (props) => {
   const fetchAllUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/users", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users`, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
         },
@@ -42,7 +42,7 @@ export const AppContextProvider = (props) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/users/login", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -72,7 +72,7 @@ export const AppContextProvider = (props) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("http://localhost:8000/api/users/register", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/register`, {
         method: "POST",
         body: formData, // formData for file upload
       });
@@ -95,7 +95,7 @@ export const AppContextProvider = (props) => {
   const logout = async () => {
     console.log("Logout function started");
     try {
-      await fetch("http://localhost:8000/api/users/logout", {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/users/logout`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${getToken()}`,
@@ -124,7 +124,7 @@ export const AppContextProvider = (props) => {
     }
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/users/me", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -149,7 +149,7 @@ export const AppContextProvider = (props) => {
   const fetchPendingRequestsCount = async () => {
     if (!localStorage.getItem('token')) return setPendingRequestsCount(0);
     try {
-      const res = await fetch('http://localhost:8000/api/match-requests/received', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/received`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       const data = await res.json();

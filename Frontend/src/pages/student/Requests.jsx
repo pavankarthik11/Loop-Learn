@@ -5,8 +5,8 @@ import Footer from '../../components/student/Footer';
 import { assets } from '../../assets/assets';
 import { Link } from 'react-router-dom';
 
-const API_BASE = 'http://localhost:8000/api/match-requests';
-const TXN_API_BASE = 'http://localhost:8000/api/transactions';
+const API_BASE = `${import.meta.env.VITE_API_URL}/api/match-requests`;
+const TXN_API_BASE = `${import.meta.env.VITE_API_URL}/api/transactions`;
 
 const statusColors = {
   pending: 'text-gray-500',

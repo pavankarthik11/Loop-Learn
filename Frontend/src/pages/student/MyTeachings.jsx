@@ -18,7 +18,7 @@ const MyTeachings = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch('http://localhost:8000/api/match-requests/accepted-teachings', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/accepted-teachings`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         const data = await res.json();
@@ -43,7 +43,7 @@ const MyTeachings = () => {
         if (user.skillsOffered && user.skillsOffered.length > 0 && typeof user.skillsOffered[0] === 'string' && user.skillsOffered[0].length === 24) {
           // Assume ObjectId, fetch skills
           try {
-            const res = await fetch(`http://localhost:8000/api/skills/user/${user._id}`);
+            const res = await fetch(`${import.meta.env.VITE_API_URL}/api/skills/user/${user._id}`);
             const data = await res.json();
             if (res.ok && Array.isArray(data.data)) {
               return { ...user, skillsOffered: data.data };

@@ -15,7 +15,7 @@ const UsersSection = () => {
       setLoadingLearnings(true);
       setErrorLearnings(null);
       try {
-        const res = await fetch('http://localhost:8000/api/match-requests/accepted-learnings', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/accepted-learnings`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         const data = await res.json();
@@ -34,7 +34,7 @@ const UsersSection = () => {
       setLoadingTeachings(true);
       setErrorTeachings(null);
       try {
-        const res = await fetch('http://localhost:8000/api/match-requests/accepted-teachings', {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/accepted-teachings`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         });
         const data = await res.json();

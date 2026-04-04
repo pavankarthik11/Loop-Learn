@@ -60,7 +60,7 @@ const UserDetails = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`http://localhost:8000/api/users/profile/${username}`);
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile/${username}`);
       const data = await res.json();
       if (res.ok && data.data) {
         setUserData(data.data);
@@ -85,7 +85,7 @@ const UserDetails = () => {
     const fetchAcceptedRequests = async () => {
       if (!user || !userData) return;
       try {
-        const res = await fetch(`http://localhost:8000/api/match-requests/accepted-between`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/accepted-between`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ const UserDetails = () => {
     const fetchRequests = async () => {
       if (!user || !userData) return;
       try {
-        const res = await fetch(`http://localhost:8000/api/match-requests/requests-between`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/requests-between`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -137,7 +137,7 @@ const UserDetails = () => {
     const fetchLearnRequests = async () => {
       if (!user || !userData) return;
       try {
-        const res = await fetch(`http://localhost:8000/api/match-requests/requests-between`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/requests-between`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -166,7 +166,7 @@ const UserDetails = () => {
     setTransactionId(null);
     try {
       // 1. Request payment (existing logic)
-      await fetch('http://localhost:8000/api/transactions/request-payment', {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/transactions/request-payment`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ const UserDetails = () => {
       // (Assume backend creates transaction and returns it, or fetch it here)
       // For now, try to fetch the latest transaction for this user/request
       let txnId = null;
-      const txnRes = await fetch('http://localhost:8000/api/transactions/user', {
+      const txnRes = await fetch(`${import.meta.env.VITE_API_URL}/api/transactions/user`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
       const txnData = await txnRes.json();
@@ -192,7 +192,7 @@ const UserDetails = () => {
       let qr = null, tries = 0;
       while (!qr && tries < 10) {
         await new Promise(res => setTimeout(res, 2000));
-        const qrRes = await fetch(`http://localhost:8000/api/transactions/qr/${requestId}`, {
+        const qrRes = await fetch(`${import.meta.env.VITE_API_URL}/api/transactions/qr/${requestId}`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
         });
         const qrData = await qrRes.json();
@@ -210,7 +210,7 @@ const UserDetails = () => {
   const handleSubmitUpi = async () => {
     setUpiModal(m => ({ ...m, loading: true, error: null }));
     try {
-      const res = await fetch('http://localhost:8000/api/transactions/submit-upi', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/transactions/submit-upi`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -231,7 +231,7 @@ const UserDetails = () => {
   // Add this function to update transaction status
   const updateTransactionStatus = async (transactionId) => {
     try {
-      await fetch(`http://localhost:8000/api/transactions/${transactionId}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/api/transactions/${transactionId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -261,7 +261,7 @@ const UserDetails = () => {
     // If skill is an ObjectId, fetch from backend
     if (typeof skill === 'object' && skill._id) {
       try {
-        const res = await fetch(`http://localhost:8000/api/skill-offers/${skill._id}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/skill-offers/${skill._id}`);
         const data = await res.json();
         if (res.ok && data.data && data.data.skillName) {
           return data.data.skillName;
@@ -282,7 +282,7 @@ const UserDetails = () => {
     });
     try {
       const skillName = await fetchSkillNameIfNeeded(skill);
-      const res = await fetch('http://localhost:8000/api/match-requests/swap', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/swap`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -329,7 +329,7 @@ const UserDetails = () => {
     });
     try {
       const skillName = await fetchSkillNameIfNeeded(skill);
-      const res = await fetch('http://localhost:8000/api/match-requests/paid', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/match-requests/paid`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -397,7 +397,7 @@ const UserDetails = () => {
         setRatingLoading(false);
         return;
       }
-      const res = await fetch('http://localhost:8000/api/reviews', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -430,7 +430,7 @@ const UserDetails = () => {
       const skillId = typeof skill === 'string' ? skill : skill._id;
       if (!skillId) continue;
       try {
-        const res = await fetch(`http://localhost:8000/api/reviews/${skillId}`);
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews/${skillId}`);
         const data = await res.json();
         if (res.ok && Array.isArray(data.data)) {
           allReviews = allReviews.concat(data.data);

@@ -115,7 +115,7 @@ const EditProfile = () => {
       let res, data;
       if (editingSkillId) {
         // Edit existing skill
-        res = await fetch(`http://localhost:8000/api/skills/${editingSkillId}`, {
+        res = await fetch(`${import.meta.env.VITE_API_URL}/api/skills/${editingSkillId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -138,7 +138,7 @@ const EditProfile = () => {
         }
       } else {
         // Add new skill
-        res = await fetch('http://localhost:8000/api/skills', {
+        res = await fetch(`${import.meta.env.VITE_API_URL}/api/skills`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -193,7 +193,7 @@ const EditProfile = () => {
     const fetchMySkills = async () => {
       if (!user?._id) return;
       try {
-        const res = await fetch(`http://localhost:8000/api/skills/user/${user._id}`, {
+        const res = await fetch(`${import.meta.env.VITE_API_URL}/api/skills/user/${user._id}`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
@@ -238,7 +238,7 @@ const EditProfile = () => {
     setSuccess(null);
     try {
       // PATCH /api/users/update-account
-      const res = await fetch('http://localhost:8000/api/users/update-account', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/update-account`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -268,7 +268,7 @@ const EditProfile = () => {
     try {
       const formData = new FormData();
       formData.append('avatar', avatarFile);
-      const res = await fetch('http://localhost:8000/api/users/avatar', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/avatar`, {
         method: 'PUT',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -300,7 +300,7 @@ const EditProfile = () => {
 
   const handleRemoveSkillOffered = async (skillId) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/skills/${skillId}`, {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/skills/${skillId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -323,7 +323,7 @@ const EditProfile = () => {
       return;
     }
     try {
-      const res = await fetch('http://localhost:8000/api/users/skills-wanted', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/skills-wanted`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -343,7 +343,7 @@ const EditProfile = () => {
 
   const handleRemoveSkillWanted = async (skill) => {
     try {
-      const res = await fetch('http://localhost:8000/api/users/skills-wanted', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/skills-wanted`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -365,7 +365,7 @@ const EditProfile = () => {
     setError(null);
     setSuccess(null);
     try {
-      const res = await fetch('http://localhost:8000/api/users/update', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -408,7 +408,7 @@ const EditProfile = () => {
     }
     setPwLoading(true);
     try {
-      const res = await fetch('http://localhost:8000/api/users/change-password', {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/change-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

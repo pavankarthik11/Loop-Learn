@@ -88,7 +88,7 @@ const registerUser = asyncHandler( async (req, res) => {
             existedUser.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
             await existedUser.save();
             // Send verification link and OTP via nodemailer (Gmail)
-            const verificationUrl = `http://localhost:8000/api/users/verify-email?token=${token}`;
+            const verificationUrl = `${process.env.BASE_URL || 'http://localhost:8000'}/api/users/verify-email?token=${token}`;
             await sendEmail({
               to: existedUser.email,
               subject: 'Verify your email',
@@ -142,7 +142,7 @@ const registerUser = asyncHandler( async (req, res) => {
     user.isVerified = false;
     await user.save();
     // Send verification link and OTP via nodemailer (Gmail)
-    const verificationUrl = `http://localhost:8000/api/users/verify-email?token=${token}`;
+    const verificationUrl = `${process.env.BASE_URL || 'http://localhost:8000'}/api/users/verify-email?token=${token}`;
     await sendEmail({
       to: user.email,
       subject: 'Verify your email',
