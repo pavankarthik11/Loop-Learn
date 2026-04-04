@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
-dotenv.config(); // Load env variables
+dotenv.config();
+
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
@@ -8,10 +9,12 @@ const app = express();
 
 // ──────────────────────
 // 🔐 Global Middlewares
+
 app.use(cors({
-  origin: "http://localhost:5173",
+  origin: true,              // ✅ allow any frontend (auto handle ports)
   credentials: true
 }));
+
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 app.use(express.static("public"));
@@ -38,21 +41,22 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/transactions", transactionRoutes);
 
 // ──────────────────────
-// 🚨 Fallback
-
-// 404 handler
-app.use( (req, res) => {
-  res.status(404).json({ success: false, message: 'Route not found' });
+// 🚨 404 Handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: "Route not found"
+  });
 });
 
-// Error handler
+// ──────────────────────
+// ❗ Error Handler
 app.use((err, req, res, next) => {
   console.error(err);
   res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || 'Internal Server Error'
+    message: err.message || "Internal Server Error"
   });
 });
-
 
 export { app };

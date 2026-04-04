@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@daily-co/daily-react": "^0.23.1",
-    "qrcode": "^1.5.4"
-  }
-}
