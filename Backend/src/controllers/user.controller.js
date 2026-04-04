@@ -75,23 +75,10 @@ const registerUser = asyncHandler( async (req, res) => {
 
     if (existedUser) {
         if (!existedUser.isVerified) {
-            // Generate new verification token and OTP
-            const token = crypto.randomBytes(32).toString('hex');
-            const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            existedUser.emailVerificationToken = token;
-            existedUser.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-            existedUser.otp = otp;
-            existedUser.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+            // Auto-verify existing unverified user
+            existedUser.isVerified = true;
             await existedUser.save();
-            // Send verification link and OTP via nodemailer (Gmail)
-            const verificationUrl = `${process.env.BASE_URL || 'http://localhost:8000'}/api/users/verify-email?token=${token}`;
-            await sendEmail({
-              to: existedUser.email,
-              subject: 'Verify your email',
-              text: `Click the following link to verify your email: ${verificationUrl}\nOr enter this code: ${otp}`,
-              html: `<p>Hello ${existedUser.fullName},</p><p>Click <a href="${verificationUrl}">here</a> to verify your email.<br/>Or enter this code: <b>${otp}</b> in the verification page.</p>`
-            });
-            return res.status(200).json({ message: "Account exists but not verified. Verification link and code re-sent." });
+            return res.status(200).json({ message: "Account verified successfully. You can now log in." });
         }
         throw new ApiError(409, "User with email or username already exists");
     }
@@ -128,23 +115,21 @@ const registerUser = asyncHandler( async (req, res) => {
         password,
         username: username.toLowerCase()
     })
-    // Generate verification token and OTP for email verification
-    const token = crypto.randomBytes(32).toString('hex');
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.emailVerificationToken = token;
-    user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
-    user.otp = otp;
-    user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
-    user.isVerified = false;
+    // Auto-verify user (email verification disabled until domain is configured on Resend)
+    user.isVerified = true;
     await user.save();
-    // Send verification link and OTP via nodemailer (Gmail)
-    const verificationUrl = `${process.env.BASE_URL || 'http://localhost:8000'}/api/users/verify-email?token=${token}`;
-    await sendEmail({
-      to: user.email,
-      subject: 'Verify your email',
-      text: `Click the following link to verify your email: ${verificationUrl}\nOr enter this code: ${otp}`,
-      html: `<p>Hello ${user.fullName},</p><p>Click <a href="${verificationUrl}">here</a> to verify your email.<br/>Or enter this code: <b>${otp}</b> in the verification page.</p>`
-    });
+
+    // Try to send welcome email (non-blocking)
+    try {
+      await sendEmail({
+        to: user.email,
+        subject: 'Welcome to LoopLearn!',
+        text: `Hi ${user.fullName}, welcome to LoopLearn! Your account is ready.`,
+        html: `<p>Hi ${user.fullName},</p><p>Welcome to LoopLearn! Your account is ready. Start exploring skills to teach and learn.</p>`
+      });
+    } catch (emailErr) {
+      console.log('Welcome email skipped (Resend domain not verified):', emailErr.message);
+    }
 
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
