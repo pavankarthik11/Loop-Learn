@@ -6,10 +6,11 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import crypto from 'crypto';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import dotenv from 'dotenv';
-// Remove Resend import
 dotenv.config();
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -28,27 +29,22 @@ const generateAccessAndRefreshToken = async (userId) => {
     
 }
 
-// Helper to send email using nodemailer and Gmail
+// Helper to send email using Resend (HTTP API - works on Render/Vercel)
 const sendEmail = async ({ to, subject, text, html }) => {
-    // ✅ Check if environment variables are loading
-    console.log("GMAIL_USER:", process.env.GMAIL_USER);
-    console.log("GMAIL_PASS:", process.env.GMAIL_PASS);
-  
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS,
-      },
-    });
-  
-    await transporter.sendMail({
-      from: process.env.GMAIL_USER,
+    const { data, error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
       to,
       subject,
       text,
       html,
     });
+
+    if (error) {
+      console.error("Resend email error:", error);
+      throw new Error(error.message || "Failed to send email");
+    }
+
+    console.log("Email sent successfully:", data);
   };
   
 
