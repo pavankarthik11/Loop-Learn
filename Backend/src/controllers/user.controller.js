@@ -6,11 +6,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import crypto from 'crypto';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -29,24 +27,32 @@ const generateAccessAndRefreshToken = async (userId) => {
     
 }
 
-// Helper to send email using Resend (HTTP API - works on Render/Vercel)
-const sendEmail = async ({ to, subject, text, html }) => {
-    const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-      to,
-      subject,
-      text,
-      html,
-    });
-
-    if (error) {
-      console.error("Resend email error:", error);
-      throw new Error(error.message || "Failed to send email");
+// Helper to send email using nodemailer
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS
     }
+});
 
-    console.log("Email sent successfully:", data);
-  };
-  
+const sendEmail = async ({ to, subject, text, html }) => {
+    const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to,
+        subject,
+        text,
+        html
+    };
+
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log("Email sent successfully:", info.messageId);
+    } catch (error) {
+        console.error("Nodemailer email error:", error);
+        throw new Error(error.message || "Failed to send email");
+    }
+};
 
 const registerUser = asyncHandler( async (req, res) => {
     // get user details from frontend
@@ -75,10 +81,23 @@ const registerUser = asyncHandler( async (req, res) => {
 
     if (existedUser) {
         if (!existedUser.isVerified) {
-            // Auto-verify existing unverified user
-            existedUser.isVerified = true;
+            // User exists but unverified -> Generate new OTP and resend
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            existedUser.otp = otp;
+            existedUser.otpExpiry = Date.now() + 10 * 60 * 1000;
             await existedUser.save();
-            return res.status(200).json({ message: "Account verified successfully. You can now log in." });
+            
+            try {
+              await sendEmail({
+                to: existedUser.email,
+                subject: 'LoopLearn - Registration OTP',
+                text: `Hi ${existedUser.fullName}, your registration OTP is: ${otp}`,
+                html: `<p>Hi ${existedUser.fullName},</p><p>Your registration OTP is: <strong>${otp}</strong>. It expires in 10 minutes.</p>`
+              });
+            } catch (error) {
+              console.log('OTP email failed to send:', error.message);
+            }
+            return res.status(200).json(new ApiResponse(200, {}, "Unverified user. Verification OTP sent again."));
         }
         throw new ApiError(409, "User with email or username already exists");
     }
@@ -115,20 +134,24 @@ const registerUser = asyncHandler( async (req, res) => {
         password,
         username: username.toLowerCase()
     })
-    // Auto-verify user (email verification disabled until domain is configured on Resend)
-    user.isVerified = true;
+    // Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
+    user.isVerified = false; // Require verification
+
     await user.save();
 
-    // Try to send welcome email (non-blocking)
+    // Try to send OTP email
     try {
       await sendEmail({
         to: user.email,
-        subject: 'Welcome to LoopLearn!',
-        text: `Hi ${user.fullName}, welcome to LoopLearn! Your account is ready.`,
-        html: `<p>Hi ${user.fullName},</p><p>Welcome to LoopLearn! Your account is ready. Start exploring skills to teach and learn.</p>`
+        subject: 'LoopLearn - Registration OTP',
+        text: `Hi ${user.fullName}, your registration OTP is: ${otp}`,
+        html: `<p>Hi ${user.fullName},</p><p>Your registration OTP is: <strong>${otp}</strong>. It expires in 10 minutes.</p>`
       });
     } catch (emailErr) {
-      console.log('Welcome email skipped (Resend domain not verified):', emailErr.message);
+      console.log('OTP email failed to send:', emailErr.message);
     }
 
     const createdUser = await User.findById(user._id).select(
