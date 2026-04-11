@@ -28,7 +28,7 @@ const Register = () => {
     if (avatar) formData.append('avatar', avatar);
     const success = await register(formData);
     if (success) {
-      setSuccessMessage('Registration successful! Please check your email for a verification link or code.');
+      setSuccessMessage('Registration successful! You can now log in.');
     } else {
       setFormError('Registration failed. Please check your details.');
     }
@@ -70,9 +70,9 @@ const Register = () => {
               <button
                 type="button"
                 className="w-full bg-blue-500 text-white py-2 rounded mt-2"
-                onClick={() => navigate(`/otp-verification?email=${encodeURIComponent(email)}`)}
+                onClick={() => navigate(`/login`)}
               >
-                Enter Verification Code
+                Go to Login
               </button>
             </div>
           </div>

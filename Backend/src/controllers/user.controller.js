@@ -142,27 +142,9 @@ const registerUser = asyncHandler( async (req, res) => {
         password,
         username: username.toLowerCase()
     })
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    user.otp = otp;
-    user.otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes
-    user.isVerified = false; // Require verification
-
+    // Auto-verify for easy testing
+    user.isVerified = true;
     await user.save();
-
-    // Try to send OTP email
-    let emailStatus = {};
-    try {
-      emailStatus = await sendEmail({
-        to: user.email,
-        subject: 'LoopLearn - Registration OTP',
-        text: `Hi ${user.fullName}, your registration OTP is: ${otp}`,
-        html: `<p>Hi ${user.fullName},</p><p>Your registration OTP is: <strong>${otp}</strong>. It expires in 10 minutes.</p>`
-      });
-    } catch (emailErr) {
-      console.log('OTP email failed to send:', emailErr.message);
-      emailStatus = { success: false, message: emailErr.message };
-    }
 
     const createdUser = await User.findById(user._id).select(
         "-password -refreshToken"
@@ -172,9 +154,9 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(500, "Something went wrong while registering the user")
     }
 
-    // Attach the OTP in the API Response for Testing/Demo purposes
+    // User instantly verified
     return res.status(201).json(
-        new ApiResponse(200, { user: createdUser, devOtp: otp, emailResult: emailStatus }, "User registered Successfully")
+        new ApiResponse(200, { user: createdUser }, "User registered successfully and automatically verified.")
     )
 
 
