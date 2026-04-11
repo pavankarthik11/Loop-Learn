@@ -6,11 +6,9 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import crypto from 'crypto';
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 import dotenv from 'dotenv';
 dotenv.config();
-
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -29,22 +27,32 @@ const generateAccessAndRefreshToken = async (userId) => {
     
 }
 
-// Helper to send email using Resend (HTTP API - works on Render without hanging)
-const sendEmail = async ({ to, subject, text, html }) => {
-    const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-      to,
-      subject,
-      text,
-      html,
-    });
-
-    if (error) {
-      console.error("Resend email error:", error);
-      throw new Error(error.message || "Failed to send email");
+// Helper to send email using nodemailer
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_PASS
     }
+});
 
-    console.log("Email sent successfully via Resend:", data);
+const sendEmail = async ({ to, subject, text, html }) => {
+    const mailOptions = {
+        from: process.env.GMAIL_USER,
+        to,
+        subject,
+        text,
+        html
+    };
+
+    // We do NOT block on sendEmail failing!
+    try {
+        const info = await transporter.sendMail(mailOptions);
+        console.log("Email sent successfully:", info.messageId);
+    } catch (error) {
+        console.error("Nodemailer email error:", error.message);
+        // Do not throw the error, just log it, so the backend doesn't hang or crash!
+    }
 };
 
 const registerUser = asyncHandler( async (req, res) => {
@@ -81,7 +89,8 @@ const registerUser = asyncHandler( async (req, res) => {
             await existedUser.save();
             
             try {
-              await sendEmail({
+              // Send without awaiting to prevent hanging the response
+              sendEmail({
                 to: existedUser.email,
                 subject: 'LoopLearn - Registration OTP',
                 text: `Hi ${existedUser.fullName}, your registration OTP is: ${otp}`,
@@ -90,7 +99,8 @@ const registerUser = asyncHandler( async (req, res) => {
             } catch (error) {
               console.log('OTP email failed to send:', error.message);
             }
-            return res.status(200).json(new ApiResponse(200, {}, "Unverified user. Verification OTP sent again."));
+            // Include devOtp so you can test it even if Render blocks the email
+            return res.status(200).json(new ApiResponse(200, { devOtp: otp }, "Unverified user. Verification OTP sent again."));
         }
         throw new ApiError(409, "User with email or username already exists");
     }
@@ -135,9 +145,9 @@ const registerUser = asyncHandler( async (req, res) => {
 
     await user.save();
 
-    // Try to send OTP email
+    // Try to send OTP email (Without awaiting so it doesn't hang if SMTP is blocked)
     try {
-      await sendEmail({
+      sendEmail({
         to: user.email,
         subject: 'LoopLearn - Registration OTP',
         text: `Hi ${user.fullName}, your registration OTP is: ${otp}`,
@@ -155,8 +165,9 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(500, "Something went wrong while registering the user")
     }
 
+    // Attach the OTP in the API Response for Testing/Demo purposes
     return res.status(201).json(
-        new ApiResponse(200, createdUser, "User registered Successfully")
+        new ApiResponse(200, { user: createdUser, devOtp: otp }, "User registered Successfully")
     )
 
 
