@@ -45,13 +45,12 @@ const sendEmail = async ({ to, subject, text, html }) => {
         html
     };
 
-    // We do NOT block on sendEmail failing!
     try {
         const info = await transporter.sendMail(mailOptions);
         console.log("Email sent successfully:", info.messageId);
     } catch (error) {
         console.error("Nodemailer email error:", error.message);
-        // Do not throw the error, just log it, so the backend doesn't hang or crash!
+        throw new Error(error.message || "Failed to send email");
     }
 };
 
@@ -89,8 +88,8 @@ const registerUser = asyncHandler( async (req, res) => {
             await existedUser.save();
             
             try {
-              // Send without awaiting to prevent hanging the response
-              sendEmail({
+              // Send WITH await so it returns the true error to frontend
+              await sendEmail({
                 to: existedUser.email,
                 subject: 'LoopLearn - Registration OTP',
                 text: `Hi ${existedUser.fullName}, your registration OTP is: ${otp}`,
@@ -98,6 +97,7 @@ const registerUser = asyncHandler( async (req, res) => {
               });
             } catch (error) {
               console.log('OTP email failed to send:', error.message);
+              throw new ApiError(500, "Email delivery failed: " + error.message);
             }
             // Include devOtp so you can test it even if Render blocks the email
             return res.status(200).json(new ApiResponse(200, { devOtp: otp }, "Unverified user. Verification OTP sent again."));
@@ -145,9 +145,9 @@ const registerUser = asyncHandler( async (req, res) => {
 
     await user.save();
 
-    // Try to send OTP email (Without awaiting so it doesn't hang if SMTP is blocked)
+    // Try to send OTP email
     try {
-      sendEmail({
+      await sendEmail({
         to: user.email,
         subject: 'LoopLearn - Registration OTP',
         text: `Hi ${user.fullName}, your registration OTP is: ${otp}`,
@@ -155,6 +155,7 @@ const registerUser = asyncHandler( async (req, res) => {
       });
     } catch (emailErr) {
       console.log('OTP email failed to send:', emailErr.message);
+      throw new ApiError(500, "Email delivery failed: " + emailErr.message);
     }
 
     const createdUser = await User.findById(user._id).select(
