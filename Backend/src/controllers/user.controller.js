@@ -101,7 +101,7 @@ const registerUser = asyncHandler( async (req, res) => {
               });
             } catch (error) {
               console.log('OTP email failed to send:', error.message);
-              throw new ApiError(500, "Email delivery failed: " + error.message);
+              // We do not throw 500 here so the user can still bypass via devOtp
             }
             // Include devOtp so you can test it even if Render blocks the email
             return res.status(200).json(new ApiResponse(200, { devOtp: otp }, "Unverified user. Verification OTP sent again."));
@@ -159,7 +159,7 @@ const registerUser = asyncHandler( async (req, res) => {
       });
     } catch (emailErr) {
       console.log('OTP email failed to send:', emailErr.message);
-      throw new ApiError(500, "Email delivery failed: " + emailErr.message);
+      // We do not throw 500 here so the user can still bypass via devOtp
     }
 
     const createdUser = await User.findById(user._id).select(
