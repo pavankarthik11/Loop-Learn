@@ -33,7 +33,11 @@ const transporter = nodemailer.createTransport({
     auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS
-    }
+    },
+    // Adding 5-second timeouts to PREVENT infinite hanging on blocked servers!
+    connectionTimeout: 5000,
+    greetingTimeout: 5000,
+    socketTimeout: 5000
 });
 
 const sendEmail = async ({ to, subject, text, html }) => {
