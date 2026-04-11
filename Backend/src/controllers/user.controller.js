@@ -52,9 +52,10 @@ const sendEmail = async ({ to, subject, text, html }) => {
     try {
         const info = await transporter.sendMail(mailOptions);
         console.log("Email sent successfully:", info.messageId);
+        return { success: true };
     } catch (error) {
         console.error("Nodemailer email error:", error.message);
-        throw new Error(error.message || "Failed to send email");
+        return { success: false, message: error.message };
     }
 };
 
@@ -150,8 +151,9 @@ const registerUser = asyncHandler( async (req, res) => {
     await user.save();
 
     // Try to send OTP email
+    let emailStatus = {};
     try {
-      await sendEmail({
+      emailStatus = await sendEmail({
         to: user.email,
         subject: 'LoopLearn - Registration OTP',
         text: `Hi ${user.fullName}, your registration OTP is: ${otp}`,
@@ -159,7 +161,7 @@ const registerUser = asyncHandler( async (req, res) => {
       });
     } catch (emailErr) {
       console.log('OTP email failed to send:', emailErr.message);
-      // We do not throw 500 here so the user can still bypass via devOtp
+      emailStatus = { success: false, message: emailErr.message };
     }
 
     const createdUser = await User.findById(user._id).select(
@@ -172,7 +174,7 @@ const registerUser = asyncHandler( async (req, res) => {
 
     // Attach the OTP in the API Response for Testing/Demo purposes
     return res.status(201).json(
-        new ApiResponse(200, { user: createdUser, devOtp: otp }, "User registered Successfully")
+        new ApiResponse(200, { user: createdUser, devOtp: otp, emailResult: emailStatus }, "User registered Successfully")
     )
 
 
